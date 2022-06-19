@@ -1,0 +1,10 @@
+{
+    "name": "tournament-test",
+    "version": "1.0.0",
+    "description": "Tournament smart contarct for NEAR",
+    "author": "D G",
+    "license": "ISC",
+    "scripts": {
+        "build": "cd tournament-contract && bash build.sh && cd ../.."
+    }
+}
