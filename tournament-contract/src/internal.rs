@@ -1,6 +1,6 @@
 use crate::*;
 use near_sdk::{CryptoHash};
-//use std::mem::size_of;
+
 
 //used to generate a unique prefix in our storage collections (this is to avoid data collisions)
 pub(crate) fn hash_tournament_id(tournament_id: &TournamentId, shift: &String) -> CryptoHash {

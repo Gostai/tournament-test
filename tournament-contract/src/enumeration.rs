@@ -3,12 +3,12 @@ use crate::*;
 #[near_bindgen]
 impl Contract {
     
-    //Query for nft tokens on the contract regardless of the owner using pagination
+    //Query for  tournaments on the contract regardless of the ID using pagination
     pub fn display_tournaments(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonTournament> {
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
     let start = u128::from(from_index.unwrap_or(U128(0)));
 
-    //iterate through each token using an iterator
+    //iterate through each tournament using an iterator
     self.tournament_metadata_by_id.keys()
         //skip to the index we specified in the start variable
         .skip(start as usize) 
