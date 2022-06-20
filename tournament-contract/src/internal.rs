@@ -1,14 +1,27 @@
 use crate::*;
 use near_sdk::{CryptoHash};
 
-
 //used to generate a unique prefix in our storage collections (this is to avoid data collisions)
 pub(crate) fn hash_tournament_id(tournament_id: &TournamentId, shift: &String) -> CryptoHash {
     //get the default hash
     let mut hash = CryptoHash::default();
+    
     //we hash the tournament ID with shift and return it
     hash.copy_from_slice(&env::sha256((tournament_id.to_owned()+shift).as_bytes()));
+    
     hash
+}
+
+//calculates the percents from the amount
+pub(crate) fn percent_calculation ( &percent_value: &u128, &amount: &u128)-> u128 {    
+    let mut percent_amount: u128 = (percent_value * amount)/100;    
+    let reminder = (percent_value * amount)%100;                
+        if reminder!=0{
+            if ((amount * 10 )/reminder) > 4 {
+                percent_amount+=1;
+            } 
+        }        
+    return percent_amount;        
 }
 
 impl Contract {
@@ -34,21 +47,18 @@ impl Contract {
 
         for (key, value) in percents_map {
             prizes_map.insert(&key, &value);
-        }
-        
+        }        
 
         //we insert that map for the given tournament ID. 
         self.winners_percents_per_tournament.insert(tournament_id, &prizes_map);
-    }
-    
+    }    
     
     //add a player to the set of players the tournament has
     pub(crate) fn internal_add_player_to_tournament(
         &mut self,
         tournament_id: &TournamentId,
         player: &AccountId,        
-    ) ->bool {
-    
+    ) -> bool {    
         //get the set of players for the given tournament
         let mut players_set = self.players_per_tournament.get(tournament_id).unwrap_or_else(|| {
             //if the tournament doesn't have any players, we create a new unordered set
@@ -67,6 +77,7 @@ impl Contract {
 
         //we insert that set for the given tournament ID. 
         self.players_per_tournament.insert(&tournament_id, &players_set);
+        
         new_one
     }
     
@@ -74,12 +85,12 @@ impl Contract {
     pub(crate) fn internal_get_players_number_in_tournament(
         &self,
         tournament_id: &TournamentId,     
-    ) -> u8 {
-    
+    ) -> u8 {    
         //get the set of tokens for the given account
         if let Some (players_set) = self.players_per_tournament.get(tournament_id) {
             players_set.len() as u8
-        } else { 0 }   
+        } else {
+            0
+        }   
     }
 } 
-

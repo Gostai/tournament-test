@@ -10,13 +10,13 @@ use near_sdk::{
 pub use crate::metadata::*;
 pub use crate::create::*;
 pub use crate::tournament_core::*;
+use crate::internal::*;
 
 mod internal;
 mod enumeration; 
 mod metadata; 
 mod create; 
 mod tournament_core; 
-
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]

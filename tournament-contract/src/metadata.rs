@@ -1,5 +1,5 @@
 use crate::*;
-use near_sdk::json_types::{ U64, U128};
+use near_sdk::json_types::{U64, U128};
 
 pub type TournamentId = String;
 
@@ -7,8 +7,7 @@ pub type TournamentId = String;
 #[serde(crate = "near_sdk::serde")]
 pub struct TournamentContractMetadata {
     pub name: String,                
-    pub icon: Option<String>,
-               
+    pub icon: Option<String>,               
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
@@ -26,7 +25,6 @@ pub struct Tournament {
     pub active: bool,
     pub balance: u128,
 }
-
 
 //The Json tournament is what will be returned from view calls. 
 #[derive(Serialize, Deserialize)]
@@ -49,8 +47,7 @@ pub struct JsonTournament {
     pub active: bool,
     
     //total prize fond for the tournament
-    pub prize_fond: U128,
-    
+    pub prize_fond: U128,    
 }
 
 pub trait ContractMetadata {

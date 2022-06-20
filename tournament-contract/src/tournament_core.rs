@@ -1,33 +1,30 @@
 use crate::*;
 
-
-pub trait TournamentContractCore {
-        
+pub trait TournamentContractCore {        
     //get the information for a specific tournament ID
     fn display_tournament(&self, tournament_id: TournamentId) -> Option<JsonTournament>;
     
     //add player to the tournament with NEAR depositing
     fn participate_tournament(&mut self, tournament_id: TournamentId);
     
-    //get free playses in the tournament
+    //get free places in the tournament
     fn display_freeplaces_in_tournament(&self, tournament_id: TournamentId) -> Option<U64>;
     
     //refunds the prizes for the winners 
     fn reward_prizes(&mut self, tournament_id: TournamentId, winners_map: HashMap<u8,AccountId>);
 }
 
-
 #[near_bindgen]
 impl TournamentContractCore for Contract {
-
     //get the information for a specific tournament ID
     fn display_tournament(&self, tournament_id: TournamentId) -> Option<JsonTournament> {
         //if there is some token ID in the tokens_by_id collection
-        if let Some(tournament) = self.tournaments_by_id.get(&tournament_id) {
+        if let Some(tournament) = self.tournaments_by_id.get(&tournament_id) {        
             //we'll get the metadata for that token
             let metadata = self.tournament_metadata_by_id.get(&tournament_id).unwrap();
             
             let prizes = self.winners_percents_per_tournament.get(&tournament_id).unwrap();
+            
             //we return the JsonToken (wrapped by Some since we return an option)
             Some(JsonTournament {
                 tournament_id,
@@ -39,17 +36,17 @@ impl TournamentContractCore for Contract {
                 active: tournament.active,
                 prize_fond: tournament.balance.into(),
             })
-        } else { //if there wasn't a token ID in the tokens_by_id collection, we return None
+        } else { 
+            //if there wasn't a token ID in the tokens_by_id collection, we return None
             None
-        }        
-        
+        }     
     }
     
     //add player to the tournament with NEAR depositing
     #[payable]
-    fn participate_tournament(&mut self, tournament_id: TournamentId)  {
-    
+    fn participate_tournament(&mut self, tournament_id: TournamentId) {    
         let account_id: &AccountId = &env::predecessor_account_id();
+        
         let attached_deposit: Balance = env::attached_deposit();  
         
         if let Some(mut tournament) = self.tournaments_by_id.get(&tournament_id) {
@@ -81,18 +78,15 @@ impl TournamentContractCore for Contract {
             //if the refund is greater than 1 yocto NEAR, we refund the predecessor that amount
             if refund > 1 {
                 Promise::new(env::predecessor_account_id()).transfer(refund);
-            }
-        
-        }
-        
+            }        
+        }        
     }
     
     //get free playses in the tournament  
-    fn display_freeplaces_in_tournament(&self, tournament_id: TournamentId) -> Option<U64> {
-                
+    fn display_freeplaces_in_tournament(&self, tournament_id: TournamentId) -> Option<U64> {                
         //if there is some tournament ID in the tournaments_by_id collection
         if let Some(_tournament) = self.tournaments_by_id.get(&tournament_id) {
-        
+            //we'll get the metadata for that tournament
             let metadata = self.tournament_metadata_by_id.get(&tournament_id).unwrap();
             
             //calculate free places
@@ -101,24 +95,21 @@ impl TournamentContractCore for Contract {
             //return free places
             Some((free_places as u64).into())
             
-        } else { //if there wasn't a tournament_id ID in the tournaments_by_id collection, we return None
+        } else { 
+            //if there wasn't a tournament_id ID in the tournaments_by_id collection, we return None
             None
-        }        
-        
+        }
     }
     
     //refunds the prizes for the winners 
-    fn reward_prizes(&mut self, tournament_id: TournamentId, winners_map: HashMap<u8,AccountId>)  {
-        
+    fn reward_prizes(&mut self, tournament_id: TournamentId, winners_map: HashMap<u8,AccountId>) {        
         //if there is some tournament ID in the tournaments_by_id collection
-        if let Some(mut tournament) = self.tournaments_by_id.get(&tournament_id) {
-            
+        if let Some(mut tournament) = self.tournaments_by_id.get(&tournament_id) {            
             //check the owner calls this method
             assert_eq!(env::predecessor_account_id(), tournament.owner_id, "Owner's method");
             
             //check the tournament is active
-            assert!(tournament.active, "Tournament is inactive");
-            
+            assert!(tournament.active, "Tournament is inactive");            
             
             //get prizes values in persent for the places
             let prizes_map = self.winners_percents_per_tournament.get(&tournament_id).unwrap();
@@ -128,7 +119,7 @@ impl TournamentContractCore for Contract {
             
             //reward prizes
             for (place,account) in winners_map {
-            
+                //get percents to the place
                 let percents: u128 = prizes_map.get(&place).unwrap().into();
                 
                 //calculate the percents of the prize fond
@@ -147,27 +138,7 @@ impl TournamentContractCore for Contract {
             //inactivate the tournament
             tournament.active=false;
             
-            self.tournaments_by_id.insert(&tournament_id, &tournament);
-            
-        }         
-        
-    }
-    
+            self.tournaments_by_id.insert(&tournament_id, &tournament);            
+        }                 
+    }    
 }
-
-//calculates the percents from the amount
-fn percent_calculation ( &percent_value: &u128, &amount: &u128)-> u128 {
-    
-    let mut percent_amount: u128 = (percent_value * amount)/100;
-    let reminder = (percent_value * amount)%100;
-                
-        if reminder!=0{
-            if ((amount * 10 )/reminder) > 4 {
-                percent_amount+=1;
-            } 
-        }
-        
-    return percent_amount;        
-}
-
-
