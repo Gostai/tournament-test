@@ -1,5 +1,7 @@
-use crate::*;
+use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::json_types::{U64, U128};
+use near_sdk::{AccountId};
 
 pub type TournamentId = String;
 
@@ -48,16 +50,4 @@ pub struct JsonTournament {
     
     //total prize fond for the tournament
     pub prize_fond: U128,    
-}
-
-pub trait ContractMetadata {
-    //view call for returning the contract metadata
-    fn contract_metadata(&self) -> TournamentContractMetadata;
-}
-
-#[near_bindgen]
-impl ContractMetadata for Contract {
-    fn contract_metadata(&self) -> TournamentContractMetadata {
-        self.metadata.get().unwrap()
-    }
 }

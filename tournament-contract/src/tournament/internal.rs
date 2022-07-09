@@ -24,7 +24,7 @@ pub(crate) fn percent_calculation ( &percent_value: &u128, &amount: &u128)-> u12
     return percent_amount;        
 }
 
-impl Contract {
+impl TournamentContract {
     //add prize values in percents to the tournament
     pub(crate) fn internal_add_prizes_to_tournament(
         &mut self,

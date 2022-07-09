@@ -1,7 +1,7 @@
 use crate::*;
+use near_sdk::json_types::{U128};
 
-#[near_bindgen]
-impl Contract {
+impl TournamentContract {
     //tournament creation method
     pub fn tournament_create(
         &mut self,
@@ -12,9 +12,7 @@ impl Contract {
         in_price: U128,        
         tournament_owner_id: AccountId,
         percents_map: HashMap<u8,u8>,
-    ) {    
-        assert_eq!(env::predecessor_account_id(), self.owner_id, "Only owner can create tournaments");
-        
+    ) {            
         assert!(u128::from(in_price)>0,"Tournaments with zero in prise are not allowed");
         
         //specify the tornament struct that contains the owner ID 

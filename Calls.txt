@@ -1,4 +1,4 @@
-near call $NFT_CONTRACT_ID tournament_create '{"tournament_id": "tournament-1", "name": "Tournament-1", "icon": "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif" , "players_number": 8, "in_price": "100000000000000000000000" , "tournament_owner_id": "'$NFT_CONTRACT_ID'", "percents_map": {"1":50, "2":30, "3":10}}' --accountId $NFT_CONTRACT_ID
+near call $NFT_CONTRACT_ID create '{"tournament_id": "tournament-3", "name": "Tournament-3", "icon": "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif" , "players_number": 8, "in_price": "100000000000000000000000" , "tournament_owner_id": "'$NFT_CONTRACT_ID'", "percents_map": {"1":50, "2":30, "3":10}}' --accountId $NFT_CONTRACT_ID
 
 
 near view $NFT_CONTRACT_ID display_tournament '{"tournament_id": "tournament-1"}'
@@ -24,3 +24,25 @@ near call $NFT_CONTRACT_ID participate_tournament '{"tournament_id": "tournament
 near call $NFT_CONTRACT_ID participate_tournament '{"tournament_id": "tournament-2"}' --accountId dgstai.testnet --amount 1
 
 near call $NFT_CONTRACT_ID reward_prizes '{"tournament_id": "tournament-2", "winners_map": {"1":"tournament.dgstai.testnet", "2":"dgstai.testnet" }}' --accountId $NFT_CONTRACT_ID
+
+
+3
+
+
+near call $NFT_CONTRACT_ID create '{"tournament_id": "tournament-3", "name": "Tournament-3", "icon": "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif" , "players_number": 8, "in_price": "100000000000000000000000" , "tournament_owner_id": "'$NFT_CONTRACT_ID'", "percents_map": {"1":50, "2":30, "3":10}}' --accountId $NFT_CONTRACT_ID
+
+
+near view $NFT_CONTRACT_ID display_tournament '{"tournament_id": "tournament-3"}'
+
+near view $NFT_CONTRACT_ID display_tournaments 
+
+near view $NFT_CONTRACT_ID display_freeplaces_in_tournament '{"tournament_id": "tournament-3"}'
+
+participate_tournament
+
+near call $NFT_CONTRACT_ID participate_tournament '{"tournament_id": "tournament-3"}' --accountId $NFT_CONTRACT_ID --amount 0.2
+
+near call $NFT_CONTRACT_ID participate_tournament '{"tournament_id": "tournament-3"}' --accountId dgstai.testnet --amount 1
+
+near call $NFT_CONTRACT_ID reward_prizes '{"tournament_id": "tournament-3", "winners_map": {"1":"tournament.dgstai.testnet", "2":"dgstai.testnet" }}' --accountId $NFT_CONTRACT_ID
+

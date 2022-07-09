@@ -1,47 +1,27 @@
 use std::collections::HashMap;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
+use near_sdk::collections::{LazyOption, LookupMap, UnorderedSet};
 use near_sdk::json_types::{U128, U64};
-use near_sdk::serde::{Deserialize, Serialize};
+
 use near_sdk::{
-    env, near_bindgen, AccountId, Balance, CryptoHash, PanicOnDefault, Promise, 
+    env, near_bindgen, AccountId,  CryptoHash, PanicOnDefault,  BorshStorageKey
 };
 
-pub use crate::metadata::*;
-pub use crate::create::*;
-pub use crate::tournament_core::*;
-use crate::internal::*;
+mod tournament;
+use crate::tournament::*;
 
-mod internal;
-mod enumeration; 
-mod metadata; 
-mod create; 
-mod tournament_core; 
+mod macros;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
-pub struct Contract {
-    //contract owner
-    pub owner_id: AccountId,
-
-    //keeps track of all the players IDs for a given tournament
-    pub players_per_tournament: LookupMap<TournamentId, UnorderedSet<AccountId>>,
-    
-    //keeps winners refund distribution in percents for a given tournament
-    pub winners_percents_per_tournament: LookupMap<TournamentId, LookupMap<u8,u8>>,
-
-    //keeps track of the tournament struct for a given tournament ID
-    pub tournaments_by_id: LookupMap<TournamentId, Tournament>,
-
-    //keeps track of the tournament metadata for a given tournament ID
-    pub tournament_metadata_by_id: UnorderedMap<TournamentId, TournamentMetadata>,
-
-    //keeps track of the metadata for the contract
-    pub metadata: LazyOption<TournamentContractMetadata>,
+pub struct Contract {    
+    owner_id: AccountId,
+    tournament: TournamentContract,
+    metadata: LazyOption<TournamentContractMetadata>, 
 }
 
 /// Helper structure for keys of the persistent collections.
-#[derive(BorshSerialize)]
+#[derive(BorshSerialize, BorshStorageKey)]
 pub enum StorageKey {
     PlayersPerTournament,
     WinnersPercentPerTournament,
@@ -78,29 +58,40 @@ impl Contract {
     */
     #[init]
     pub fn new(owner_id: AccountId, metadata: TournamentContractMetadata) -> Self {
-        //create a variable of type Self with all the fields initialized. 
-        let this = Self {
-            //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
-            players_per_tournament: LookupMap::new(StorageKey::PlayersPerTournament.try_to_vec().unwrap()),
-            
-            winners_percents_per_tournament: LookupMap::new(StorageKey::WinnersPercentPerTournament.try_to_vec().unwrap()),
-            
-            tournaments_by_id: LookupMap::new(StorageKey::TournamentsById.try_to_vec().unwrap()),
-            
-            tournament_metadata_by_id: UnorderedMap::new(
-                StorageKey::TournamentMetadataById.try_to_vec().unwrap(),
-            ),
-            
-            //set the owner_id field equal to the passed in owner_id. 
-            owner_id,
-            
-            metadata: LazyOption::new(
-                StorageKey::TournamentContractMetadata.try_to_vec().unwrap(),
+        let metadata = LazyOption::new(
+            StorageKey::TournamentContractMetadata.try_to_vec().unwrap(),
                 Some(&metadata),
-            ),
-        };
-
-        //return the Contract object
-        this
+        );
+        
+        let tournament = TournamentContract::new(            
+            StorageKey::PlayersPerTournament,            
+            StorageKey::WinnersPercentPerTournament,           
+            StorageKey::TournamentsById,            
+            StorageKey::TournamentMetadataById,
+        );
+        
+        Self {
+            owner_id: owner_id.clone(),
+            tournament,
+            metadata,
+        }
+    }
+    
+    pub fn create(
+        &mut self,
+        tournament_id: TournamentId,
+        name: String,
+        icon: Option<String>,
+        players_number: u8,
+        in_price: U128,        
+        tournament_owner_id: AccountId,
+        percents_map: HashMap<u8,u8>,
+    ) {
+        assert_eq!(env::predecessor_account_id(), self.owner_id, "Only owner can create tournaments");
+        self.tournament.tournament_create(tournament_id, name, icon,  players_number,    in_price, tournament_owner_id, percents_map);
+        
     }
 }
+
+impl_tournament_contract_core!(Contract, tournament);
+impl_tournament_contract_enumeration!(Contract, tournament);

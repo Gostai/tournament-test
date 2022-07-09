@@ -1,4 +1,53 @@
-use crate::*;
+use near_sdk::{env, IntoStorageKey, AccountId, Balance, Promise};
+use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use near_sdk::collections::{ LookupMap, UnorderedMap, UnorderedSet};
+use near_sdk::json_types::{ U64};
+use std::collections::HashMap;
+
+use crate::tournament::metadata::{
+    TournamentId, Tournament, TournamentMetadata, JsonTournament
+};
+
+use crate::tournament::internal::{percent_calculation};
+
+#[derive(BorshDeserialize, BorshSerialize)]
+pub struct TournamentContract {  
+    //keeps track of all the players IDs for a given tournament
+    pub players_per_tournament: LookupMap<TournamentId, UnorderedSet<AccountId>>,
+    
+    //keeps winners refund distribution in percents for a given tournament
+    pub winners_percents_per_tournament: LookupMap<TournamentId, LookupMap<u8,u8>>,
+
+    //keeps track of the tournament struct for a given tournament ID
+    pub tournaments_by_id: LookupMap<TournamentId, Tournament>,
+
+    //keeps track of the tournament metadata for a given tournament ID
+    pub tournament_metadata_by_id: UnorderedMap<TournamentId, TournamentMetadata>,    
+}
+
+impl TournamentContract {
+    pub fn new<P,W,TI,TM>(        
+        players_per_tournament_prefix: P,       
+        winners_percents_per_tournament: W,
+        tournaments_by_id: TI,
+        tournament_metadata_by_id: TM,
+    ) -> Self
+        where 
+            P: IntoStorageKey,
+            W: IntoStorageKey,
+            TI: IntoStorageKey,
+            TM: IntoStorageKey,
+    {
+        let this = Self {
+            players_per_tournament: LookupMap::new(players_per_tournament_prefix),
+            winners_percents_per_tournament: LookupMap::new(winners_percents_per_tournament),
+            tournaments_by_id:LookupMap::new(tournaments_by_id),
+            tournament_metadata_by_id: UnorderedMap::new(tournament_metadata_by_id),
+        };
+        
+        this
+    }    
+}
 
 pub trait TournamentContractCore {        
     //get the information for a specific tournament ID
@@ -14,8 +63,9 @@ pub trait TournamentContractCore {
     fn reward_prizes(&mut self, tournament_id: TournamentId, winners_map: HashMap<u8,AccountId>);
 }
 
-#[near_bindgen]
-impl TournamentContractCore for Contract {
+
+
+impl TournamentContractCore for TournamentContract {
     //get the information for a specific tournament ID
     fn display_tournament(&self, tournament_id: TournamentId) -> Option<JsonTournament> {
         //if there is some token ID in the tokens_by_id collection
@@ -43,7 +93,7 @@ impl TournamentContractCore for Contract {
     }
     
     //add player to the tournament with NEAR depositing
-    #[payable]
+    //#[payable]
     fn participate_tournament(&mut self, tournament_id: TournamentId) {    
         let account_id: &AccountId = &env::predecessor_account_id();
         

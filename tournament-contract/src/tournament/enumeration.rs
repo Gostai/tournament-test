@@ -1,9 +1,13 @@
 use crate::*;
 
-#[near_bindgen]
-impl Contract {    
+pub trait TournamentContractEnumeration{
     //Query for  tournaments on the contract regardless of the ID using pagination
-    pub fn display_tournaments(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonTournament> {
+    fn display_tournaments(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonTournament>;
+}
+
+impl TournamentContractEnumeration for TournamentContract {    
+    //Query for  tournaments on the contract regardless of the ID using pagination
+    fn display_tournaments(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonTournament> {
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
         let start = u128::from(from_index.unwrap_or(U128(0)));
 
