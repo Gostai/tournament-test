@@ -93,5 +93,19 @@ impl Contract {
     }
 }
 
+pub trait ContractMetadata {
+    //view call for returning the contract metadata
+    fn contract_metadata(&self) -> TournamentContractMetadata;
+}
+
+#[near_bindgen]
+impl ContractMetadata for Contract {
+    fn contract_metadata(&self) -> TournamentContractMetadata {
+        self.metadata.get().unwrap()
+    }
+}
+
+
+
 impl_tournament_contract_core!(Contract, tournament);
 impl_tournament_contract_enumeration!(Contract, tournament);
