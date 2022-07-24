@@ -7,6 +7,19 @@ macro_rules! impl_tournament_contract_core {
         
         #[near_bindgen]
         impl TournamentContractCore for $contract {
+            fn tournament_create(
+                &mut self,
+                tournament_id: TournamentId,
+                name: String,
+                icon: Option<String>,
+                players_number: u8,
+                in_price: U128,        
+                tournament_owner_id: AccountId,
+                percents_map: HashMap<u8,u8>,
+            ) {
+                self.$tournament.tournament_create(tournament_id, name, icon, players_number, in_price, tournament_owner_id, percents_map)
+            }
+        
             fn display_tournament(
                 &self,
                 tournament_id: TournamentId

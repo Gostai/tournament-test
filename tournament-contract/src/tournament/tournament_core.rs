@@ -1,8 +1,9 @@
 use near_sdk::{env, IntoStorageKey, AccountId, Balance, Promise};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{ LookupMap, UnorderedMap, UnorderedSet};
-use near_sdk::json_types::{ U64};
+use near_sdk::json_types::{ U64, U128};
 use std::collections::HashMap;
+use crate::tournament::events::{TournamentCreateLog, TournamentEntranceLog, TournamentPrizesRewardLog};
 
 use crate::tournament::metadata::{
     TournamentId, Tournament, TournamentMetadata, JsonTournament
@@ -49,7 +50,19 @@ impl TournamentContract {
     }    
 }
 
-pub trait TournamentContractCore {        
+pub trait TournamentContractCore {   
+    //tournament creation method
+    fn tournament_create(
+        &mut self,
+        tournament_id: TournamentId,
+        name: String,
+        icon: Option<String>,
+        players_number: u8,
+        in_price: U128,        
+        tournament_owner_id: AccountId,
+        percents_map: HashMap<u8,u8>,
+    );
+
     //get the information for a specific tournament ID
     fn display_tournament(&self, tournament_id: TournamentId) -> Option<JsonTournament>;
     
@@ -66,6 +79,55 @@ pub trait TournamentContractCore {
 
 
 impl TournamentContractCore for TournamentContract {
+
+    //tournament creation method
+    fn tournament_create(
+        &mut self,
+        tournament_id: TournamentId,
+        name: String,
+        icon: Option<String>,
+        players_number: u8,
+        in_price: U128,        
+        tournament_owner_id: AccountId,
+        percents_map: HashMap<u8,u8>,
+    ) {            
+        assert!(u128::from(in_price)>0,"Tournaments with zero in prise are not allowed");
+        
+        //specify the tornament struct that contains the owner ID 
+        let tournament = Tournament {
+            //set the owner ID equal to the tournament owner ID passed into the function
+            owner_id: tournament_owner_id,
+            active: true,
+            balance: 0,            
+        };
+
+        //insert the tornament ID and tournament struct and make sure that the tournament doesn't exist
+        assert!(
+            self.tournaments_by_id.insert(&tournament_id, &tournament).is_none(),
+            "Tornament already exists"
+        );
+        
+        //specify the tournament metadata struct
+        let metadata = TournamentMetadata {
+            name: name,                
+            icon: icon,
+            players_number: players_number,
+            in_price: u128::from(in_price),
+        };
+
+        //insert the tornament ID and metadata
+        self.tournament_metadata_by_id.insert(&tournament_id, &metadata);
+        
+        //insert the prizes percents for the tournament ID
+        self.internal_add_prizes_to_tournament(&tournament_id, &percents_map);
+        
+        TournamentCreateLog{
+            tournament_id: &tournament_id,
+            players_number: &players_number,
+            in_price: &in_price,
+        }.emit();
+    }
+
     //get the information for a specific tournament ID
     fn display_tournament(&self, tournament_id: TournamentId) -> Option<JsonTournament> {
         //if there is some token ID in the tokens_by_id collection
@@ -121,6 +183,11 @@ impl TournamentContractCore for TournamentContract {
             //save the prize fond balanse of the tournament 
             tournament.balance+=metadata.in_price;
             self.tournaments_by_id.insert(&tournament_id, &tournament);
+            
+            TournamentEntranceLog{
+                partisipator_id: &account_id,
+                tournament_id: &tournament_id,                
+            }.emit();
             
             //get the refund amount from the attached deposit - required cost
             let refund = attached_deposit - metadata.in_price;
@@ -188,7 +255,12 @@ impl TournamentContractCore for TournamentContract {
             //inactivate the tournament
             tournament.active=false;
             
-            self.tournaments_by_id.insert(&tournament_id, &tournament);            
+            self.tournaments_by_id.insert(&tournament_id, &tournament);        
+            
+            TournamentPrizesRewardLog{                
+                tournament_id: &tournament_id,    
+                rewarded_amount: &sum_reward,
+            }.emit();
         }                 
     }    
 }

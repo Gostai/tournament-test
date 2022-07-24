@@ -2,15 +2,13 @@ use std::collections::HashMap;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LazyOption, LookupMap, UnorderedSet};
 use near_sdk::json_types::{U128, U64};
-
 use near_sdk::{
     env, near_bindgen, AccountId,  CryptoHash, PanicOnDefault,  BorshStorageKey
 };
-
 mod tournament;
 use crate::tournament::*;
-
 mod macros;
+mod event;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -75,22 +73,7 @@ impl Contract {
             tournament,
             metadata,
         }
-    }
-    
-    pub fn create(
-        &mut self,
-        tournament_id: TournamentId,
-        name: String,
-        icon: Option<String>,
-        players_number: u8,
-        in_price: U128,        
-        tournament_owner_id: AccountId,
-        percents_map: HashMap<u8,u8>,
-    ) {
-        assert_eq!(env::predecessor_account_id(), self.owner_id, "Only owner can create tournaments");
-        self.tournament.tournament_create(tournament_id, name, icon,  players_number,    in_price, tournament_owner_id, percents_map);
-        
-    }
+    }        
 }
 
 pub trait ContractMetadata {
@@ -104,8 +87,6 @@ impl ContractMetadata for Contract {
         self.metadata.get().unwrap()
     }
 }
-
-
 
 impl_tournament_contract_core!(Contract, tournament);
 impl_tournament_contract_enumeration!(Contract, tournament);
